@@ -7,7 +7,7 @@
             font-family: Arial, sans-serif;
             text-align: center;
             margin-top: 50px;
-            background-color: #3bbe7b;
+            background-color: #7eaed8;
         }
         h1 {
             color: #333;
