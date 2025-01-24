@@ -23,7 +23,7 @@
     </style>
 </head>
 <body>
-    <h1>Welcome to My Apache Application</h1>
+    <h1>Welcome to My Apache Application !!!</h1>
     <p>This is a sample application hosted on Apache.</p>
     <p>Server Private IP: <strong><?php echo $_SERVER['SERVER_ADDR']; ?></strong></p>
     <div class="footer">Powered by Apache Web Server</div>
