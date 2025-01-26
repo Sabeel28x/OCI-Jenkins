@@ -66,7 +66,7 @@ pipeline {
                     }
 
                     // Inject SSH credentials and deploy the code
-                    sshagent(['oci-jenkins']) {
+                    sshagent(['oci']) {
                         instanceIps.each { ip ->
                             echo "Deploying code to instance with IP: ${ip}"
 
