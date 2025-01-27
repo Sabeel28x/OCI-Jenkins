@@ -9,6 +9,7 @@ pipeline {
         REPO_URL = 'https://github.com/Sabeel28x/OCI-Jenkins.git'
         BRANCH = 'main'
         APACHE_DOC_ROOT = '/var/www/html'
+        TEAMS_WEBHOOK_URL = 'https://prod-24.centralindia.logic.azure.com:443/workflows/c01ef101a97a49aaaa3df9d6446738b9/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=u-ZjwsTHFM5tP0U7I6SHvKpWP6YLhIvyjKlDMf2EUck'
     }
     stages {
         stage('Fetch Instance IPs') {
@@ -87,36 +88,64 @@ pipeline {
         }
     }
     post {
-        success {
-            script {
+    success {
+        script {
+            def teamsPayload = [
+                "@type": "MessageCard",
+                "@context": "https://schema.org/extensions",
+                "summary": "Jenkins Build Successful",
+                "sections": [
+                    [
+                        "activityTitle": "✅ Jenkins Build Successful",
+                        "activitySubtitle": "The build completed successfully.",
+                        "facts": [
+                            ["name": "Job Name", "value": "${env.JOB_NAME}"],
+                            ["name": "Build Number", "value": "${env.BUILD_NUMBER}"],
+                            ["name": "Repository", "value": "${REPO_URL}"],
+                            ["name": "Branch", "value": "${BRANCH}"]
+                        ]
+                    ]
+                ]
+            ]
 
-                // Notify via Microsoft Teams
-                sh """
-                    curl -H 'Content-Type: application/json' -d '{
-                        "text": "✅ *Code Deployment Success*\n
-                        *Job Name:* ${env.JOB_NAME}\n
-                        *Build Number:* ${env.BUILD_NUMBER}\n
-                        *Instances Deployed:*\n${env.INSTANCE_IPS.replaceAll(',', '\\n')}\n
-                        *Repository:* ${REPO_URL}\n
-                        *Branch:* ${BRANCH}"
-                    }' https://prod-24.centralindia.logic.azure.com:443/workflows/c01ef101a97a49aaaa3df9d6446738b9/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=u-ZjwsTHFM5tP0U7I6SHvKpWP6YLhIvyjKlDMf2EUck
-                """
-            }
+            def escapedPayload = groovy.json.JsonOutput.toJson(teamsPayload).replaceAll('"', '\\"')
+
+            echo "Sending Teams Notification..."
+            sh """
+                curl -X POST "${TEAMS_WEBHOOK_URL}" \
+                -H "Content-Type: application/json" \
+                -d '${escapedPayload}'
+            """
         }
-        failure {
-            script {
+    }
+    failure {
+        script {
+            def teamsPayload = [
+                "@type": "MessageCard",
+                "@context": "https://schema.org/extensions",
+                "summary": "Jenkins Build Failed",
+                "sections": [
+                    [
+                        "activityTitle": "❌ Jenkins Build Failed",
+                        "activitySubtitle": "The build failed. Please check Jenkins for more details.",
+                        "facts": [
+                            ["name": "Job Name", "value": "${env.JOB_NAME}"],
+                            ["name": "Build Number", "value": "${env.BUILD_NUMBER}"],
+                            ["name": "Repository", "value": "${REPO_URL}"],
+                            ["name": "Branch", "value": "${BRANCH}"]
+                        ]
+                    ]
+                ]
+            ]
 
-                // Notify via Microsoft Teams
-                sh """
-                    curl -H 'Content-Type: application/json' -d '{
-                        "text": "❌ *Code Deployment Failure*\n
-                        *Job Name:* ${env.JOB_NAME}\n
-                        *Build Number:* ${env.BUILD_NUMBER}\n
-                        *Repository:* ${REPO_URL}\n
-                        *Branch:* ${BRANCH}"
-                    }' https://prod-24.centralindia.logic.azure.com:443/workflows/c01ef101a97a49aaaa3df9d6446738b9/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=u-ZjwsTHFM5tP0U7I6SHvKpWP6YLhIvyjKlDMf2EUck
-                """
-            }
+            def escapedPayload = groovy.json.JsonOutput.toJson(teamsPayload).replaceAll('"', '\\"')
+
+            echo "Sending Teams Notification..."
+            sh """
+                curl -X POST "${TEAMS_WEBHOOK_URL}" \
+                -H "Content-Type: application/json" \
+                -d '${escapedPayload}'
+            """
         }
     }
 }
