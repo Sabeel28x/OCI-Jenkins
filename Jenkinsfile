@@ -88,10 +88,35 @@ pipeline {
     }
     post {
         success {
-            echo "Code deployment to all instances completed successfully!"
+            script {
+
+                // Notify via Microsoft Teams
+                sh """
+                    curl -H 'Content-Type: application/json' -d '{
+                        "text": "✅ *Code Deployment Success*\n
+                        *Job Name:* ${env.JOB_NAME}\n
+                        *Build Number:* ${env.BUILD_NUMBER}\n
+                        *Instances Deployed:*\n${env.INSTANCE_IPS.replaceAll(',', '\\n')}\n
+                        *Repository:* ${REPO_URL}\n
+                        *Branch:* ${BRANCH}"
+                    }' https://prod-24.centralindia.logic.azure.com:443/workflows/c01ef101a97a49aaaa3df9d6446738b9/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=u-ZjwsTHFM5tP0U7I6SHvKpWP6YLhIvyjKlDMf2EUck
+                """
+            }
         }
         failure {
-            echo "Code deployment failed."
+            script {
+
+                // Notify via Microsoft Teams
+                sh """
+                    curl -H 'Content-Type: application/json' -d '{
+                        "text": "❌ *Code Deployment Failure*\n
+                        *Job Name:* ${env.JOB_NAME}\n
+                        *Build Number:* ${env.BUILD_NUMBER}\n
+                        *Repository:* ${REPO_URL}\n
+                        *Branch:* ${BRANCH}"
+                    }' https://prod-24.centralindia.logic.azure.com:443/workflows/c01ef101a97a49aaaa3df9d6446738b9/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=u-ZjwsTHFM5tP0U7I6SHvKpWP6YLhIvyjKlDMf2EUck
+                """
+            }
         }
     }
 }
