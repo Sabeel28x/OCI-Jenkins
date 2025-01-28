@@ -90,62 +90,41 @@ pipeline {
     post {
     success {
         script {
-            def teamsPayload = [
-                "@type": "MessageCard",
-                "@context": "https://schema.org/extensions",
-                "summary": "Jenkins Build Successful",
-                "sections": [
-                    [
-                        "activityTitle": "✅ Jenkins Build Successful",
-                        "activitySubtitle": "The build completed successfully.",
-                        "facts": [
-                            ["name": "Job Name", "value": "${env.JOB_NAME}"],
-                            ["name": "Build Number", "value": "${env.BUILD_NUMBER}"],
-                            ["name": "Repository", "value": "${REPO_URL}"],
-                            ["name": "Branch", "value": "${BRANCH}"]
-                        ]
-                    ]
-                ]
-            ]
-
-            def escapedPayload = groovy.json.JsonOutput.toJson(teamsPayload).replaceAll('"', '\\"')
-
-            echo "Sending Teams Notification..."
-            sh """
-                curl -X POST "${TEAMS_WEBHOOK_URL}" \
-                -H "Content-Type: application/json" \
-                -d '${escapedPayload}'
-            """
+            // Notify via Microsoft Teams on success
+            withCredentials([string(credentialsId: 'teams-webhook-url', variable: 'TEAMS_WEBHOOK_URL')]) {
+                def successMessage = """
+                    {
+                        "text": "✅ *Code Deployment Success*\n
+                        *Job Name:* ${env.JOB_NAME}\n
+                        *Build Number:* ${env.BUILD_NUMBER}\n
+                        *Instances Deployed:*\n${env.INSTANCE_IPS.replaceAll(',', '\\n')}\n
+                        *Repository:* ${REPO_URL}\n
+                        *Branch:* ${BRANCH}"
+                    }
+                """
+                sh """
+                    curl -H 'Content-Type: application/json' -d '${successMessage}' ${TEAMS_WEBHOOK_URL}
+                """
+            }
         }
     }
     failure {
         script {
-            def teamsPayload = [
-                "@type": "MessageCard",
-                "@context": "https://schema.org/extensions",
-                "summary": "Jenkins Build Failed",
-                "sections": [
-                    [
-                        "activityTitle": "❌ Jenkins Build Failed",
-                        "activitySubtitle": "The build failed. Please check Jenkins for more details.",
-                        "facts": [
-                            ["name": "Job Name", "value": "${env.JOB_NAME}"],
-                            ["name": "Build Number", "value": "${env.BUILD_NUMBER}"],
-                            ["name": "Repository", "value": "${REPO_URL}"],
-                            ["name": "Branch", "value": "${BRANCH}"]
-                        ]
-                    ]
-                ]
-            ]
-
-            def escapedPayload = groovy.json.JsonOutput.toJson(teamsPayload).replaceAll('"', '\\"')
-
-            echo "Sending Teams Notification..."
-            sh """
-                curl -X POST "${TEAMS_WEBHOOK_URL}" \
-                -H "Content-Type: application/json" \
-                -d '${escapedPayload}'
-            """
+            // Notify via Microsoft Teams on failure
+            withCredentials([string(credentialsId: 'teams-webhook-url', variable: 'TEAMS_WEBHOOK_URL')]) {
+                def failureMessage = """
+                    {
+                        "text": "❌ *Code Deployment Failure*\n
+                        *Job Name:* ${env.JOB_NAME}\n
+                        *Build Number:* ${env.BUILD_NUMBER}\n
+                        *Repository:* ${REPO_URL}\n
+                        *Branch:* ${BRANCH}"
+                    }
+                """
+                sh """
+                    curl -H 'Content-Type: application/json' -d '${failureMessage}' ${TEAMS_WEBHOOK_URL}
+                """
+            }
         }
     }
   }
