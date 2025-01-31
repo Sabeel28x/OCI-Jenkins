@@ -9,13 +9,17 @@ pipeline {
         REPO_URL = 'https://github.com/Sabeel28x/OCI-Jenkins.git'
         BRANCH = 'main'
         APACHE_DOC_ROOT = '/var/www/html'
+        OCI_PATH = '/var/lib/jenkins/bin' // Ensure OCI CLI path is included
     }
     stages {
         stage('Fetch Instance IPs') {
             steps {
                 script {
                     echo "Fetching instance list from OCI Instance Pool..."
-                    
+
+                    // Ensure OCI CLI is in the PATH
+                    sh "export PATH=\$PATH:${OCI_PATH}"
+
                     // Fetch instance IDs from the instance pool
                     def instanceList = sh(script: """
                         oci compute-management instance-pool list-instances \
@@ -23,12 +27,12 @@ pipeline {
                             --compartment-id ${OCI_COMPARTMENT_ID} \
                             --output json
                     """, returnStdout: true).trim()
-                    
+
                     def instances = readJSON text: instanceList
-                    
+
                     // Extract instance IDs
                     def instanceIds = instances.data.collect { it.id }
-                    
+
                     // Fetch private IPs for each instance
                     def instanceIps = []
                     instanceIds.each { instanceId ->
@@ -37,17 +41,17 @@ pipeline {
                                 --instance-id ${instanceId} \
                                 --output json
                         """, returnStdout: true).trim()
-                        
+
                         def vnics = readJSON text: vnicInfo
                         def privateIp = vnics.data[0]['private-ip']
                         instanceIps.add(privateIp)
                     }
-                    
+
                     // Ensure IPs were collected
                     if (instanceIps.isEmpty()) {
                         error("No private IPs found. Cannot proceed with deployment.")
                     }
-                    
+
                     echo "Private IPs: ${instanceIps}"
                     env.INSTANCE_IPS = instanceIps.join(',')
                 }
@@ -70,15 +74,9 @@ pipeline {
                         instanceIps.each { ip ->
                             echo "Deploying code to instance with IP: ${ip}"
 
-                            // Debug: Test SSH connection
-                            sh """
-                                ssh -o StrictHostKeyChecking=no opc@${ip} 'echo SSH connection successful to ${ip}'
-                            """
-
                             // Use sudo -i to execute commands as root in an interactive shell
                             sh """
                                 ssh -o StrictHostKeyChecking=no opc@${ip} '
-                                    echo "Cloning repository and deploying code to ${ip}"
                                     cd ${APACHE_DOC_ROOT} && \
                                     sudo git clone ${REPO_URL} && \
                                     sudo mv OCI-Jenkins/index.php /var/www/html && \
