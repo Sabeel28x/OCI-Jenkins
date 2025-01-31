@@ -95,7 +95,7 @@ pipeline {
             echo "Code deployment to all instances completed successfully!"
         }
         failure {
-            echo "Code deployment failed."
+            echo "Code deployment failed!."
         }
     }
 }
