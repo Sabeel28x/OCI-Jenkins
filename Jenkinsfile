@@ -23,12 +23,11 @@ pipeline {
                             --compartment-id ${OCI_COMPARTMENT_ID} \
                             --output json
                     """, returnStdout: true).trim()
-                    
+
+                    // Parse the output and get instance IDs
                     def instances = readJSON text: instanceList
-                    Q
-                    // Extract instance IDs
                     def instanceIds = instances.data.collect { it.id }
-                    
+
                     // Fetch private IPs for each instance
                     def instanceIps = []
                     instanceIds.each { instanceId ->
@@ -37,17 +36,18 @@ pipeline {
                                 --instance-id ${instanceId} \
                                 --output json
                         """, returnStdout: true).trim()
-                        
+
                         def vnics = readJSON text: vnicInfo
                         def privateIp = vnics.data[0]['private-ip']
                         instanceIps.add(privateIp)
                     }
-                    
+
                     // Ensure IPs were collected
                     if (instanceIps.isEmpty()) {
                         error("No private IPs found. Cannot proceed with deployment.")
                     }
-                    
+
+                    // Set the instance IPs in an environment variable
                     echo "Private IPs: ${instanceIps}"
                     env.INSTANCE_IPS = instanceIps.join(',')
                 }
@@ -75,7 +75,7 @@ pipeline {
                                 ssh -o StrictHostKeyChecking=no opc@${ip} '
                                     cd ${APACHE_DOC_ROOT} && \
                                     sudo git clone ${REPO_URL} && \
-                                    sudo mv OCI-Jenkins/index.php /var/www/html && \
+                                    sudo mv OCI-Jenkins/index.php ${APACHE_DOC_ROOT} && \
                                     sudo rm -rf OCI-Jenkins && \
                                     sudo systemctl restart httpd
                                 '
