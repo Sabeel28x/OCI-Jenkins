@@ -18,6 +18,7 @@ pipeline {
                     
                     // Fetch instance IDs from the instance pool
                     def instanceList = sh(script: """
+                        source /var/lib/jenkins/.bashrc
                         oci compute-management instance-pool list-instances \
                             --instance-pool-id ${OCI_POOL_ID} \
                             --compartment-id ${OCI_COMPARTMENT_ID} \
@@ -25,7 +26,7 @@ pipeline {
                     """, returnStdout: true).trim()
                     
                     def instances = readJSON text: instanceList
-                    Q
+                    
                     // Extract instance IDs
                     def instanceIds = instances.data.collect { it.id }
                     
@@ -33,6 +34,7 @@ pipeline {
                     def instanceIps = []
                     instanceIds.each { instanceId ->
                         def vnicInfo = sh(script: """
+                            source /var/lib/jenkins/.bashrc
                             oci compute instance list-vnics \
                                 --instance-id ${instanceId} \
                                 --output json
@@ -72,6 +74,7 @@ pipeline {
 
                             // Use sudo -i to execute commands as root in an interactive shell
                             sh """
+                                source /var/lib/jenkins/.bashrc
                                 ssh -o StrictHostKeyChecking=no opc@${ip} '
                                     cd ${APACHE_DOC_ROOT} && \
                                     sudo git clone ${REPO_URL} && \
