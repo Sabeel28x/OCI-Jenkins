@@ -4,7 +4,7 @@ pipeline {
         githubPush()
     }
     environment {
-        OCI_POOL_ID = 'ocid1.instancepool.oc1.ap-mumbai-1.aaaaaaaazi3z5myovpdtc45qensdkwuqgbyq4lkgeqkz5ish2ij7tfezg6pq'
+        OCI_POOL_ID = 'ocid1.instancepool.oc1.ap-mumbai-1.aaaaaaaa4ndkxh7cjzfxssujxpylukjlglgtl2gp7bgw6bcpglbo62gsw5zq'
         OCI_COMPARTMENT_ID = 'ocid1.compartment.oc1..aaaaaaaa3s5mtrcqpxjacf53plx4cvlbw4tttytumicdcojrbe2twmmyib4q'
         REPO_URL = 'https://github.com/Sabeel28x/OCI-Jenkins.git'
         BRANCH = 'main'
@@ -18,7 +18,6 @@ pipeline {
                     
                     // Fetch instance IDs from the instance pool
                     def instanceList = sh(script: """
-                        . /var/lib/jenkins/.bashrc
                         oci compute-management instance-pool list-instances \
                             --instance-pool-id ${OCI_POOL_ID} \
                             --compartment-id ${OCI_COMPARTMENT_ID} \
@@ -26,6 +25,7 @@ pipeline {
                     """, returnStdout: true).trim()
                     
                     def instances = readJSON text: instanceList
+                    Q
                     // Extract instance IDs
                     def instanceIds = instances.data.collect { it.id }
                     
@@ -33,7 +33,6 @@ pipeline {
                     def instanceIps = []
                     instanceIds.each { instanceId ->
                         def vnicInfo = sh(script: """
-                            . /var/lib/jenkins/.bashrc
                             oci compute instance list-vnics \
                                 --instance-id ${instanceId} \
                                 --output json
@@ -73,7 +72,6 @@ pipeline {
 
                             // Use sudo -i to execute commands as root in an interactive shell
                             sh """
-                                . /var/lib/jenkins/.bashrc
                                 ssh -o StrictHostKeyChecking=no opc@${ip} '
                                     cd ${APACHE_DOC_ROOT} && \
                                     sudo git clone ${REPO_URL} && \
