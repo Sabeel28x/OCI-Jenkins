@@ -9,7 +9,6 @@ pipeline {
         REPO_URL = 'https://github.com/Sabeel28x/OCI-Jenkins.git'
         BRANCH = 'main'
         APACHE_DOC_ROOT = '/var/www/html'
-        PATH = "/var/lib/jenkins/bin:${env.PATH}"  // Add this line to include OCI CLI path
     }
     stages {
         stage('Fetch Instance IPs') {
@@ -26,7 +25,7 @@ pipeline {
                     """, returnStdout: true).trim()
                     
                     def instances = readJSON text: instanceList
-                    
+                    Q
                     // Extract instance IDs
                     def instanceIds = instances.data.collect { it.id }
                     
