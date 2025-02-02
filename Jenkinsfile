@@ -127,7 +127,8 @@ pipeline {
                 """
             }
         }
-        failure {               
+
+        failure {        
                 // Send Microsoft Teams notification
                 def teamsPayload = [
                     body: [
@@ -163,7 +164,6 @@ pipeline {
                     -H "Content-Type: application/json" \
                     -d '${escapedPayload}'
                 """
-            }
         }
     }
 }
