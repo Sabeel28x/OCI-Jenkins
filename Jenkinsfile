@@ -88,10 +88,98 @@ pipeline {
     }
     post {
         success {
-            echo "Code deployment to all instances completed successfully!"
+            script {
+                def subject = "Jenkins Build Successful"
+                def message = "The build was successful. Please check the Jenkins console output for more details."
+
+                // Send email
+                mail to: env.EMAIL_RECIPIENTS, 
+                     subject: subject, 
+                     body: message
+                
+                // Send Microsoft Teams notification
+                def teamsPayload = [
+                    body: [
+                        attachments: [
+                            [
+                                contentType: "application/vnd.microsoft.card.adaptive",
+                                content: [
+                                    type: "AdaptiveCard",
+                                    body: [
+                                        [
+                                            type: "TextBlock",
+                                            text: "Jenkins Build Successful",
+                                            weight: "bolder",
+                                            size: "large"
+                                        ],
+                                        [
+                                            type: "TextBlock",
+                                            text: "The build was successful. Please check the Jenkins console output for more details."
+                                        ]
+                                    ],
+                                    actions: []
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+
+                // Escape JSON payload for curl
+                def escapedPayload = groovy.json.JsonOutput.toJson(teamsPayload).replaceAll('"', '\\"')
+
+                sh """
+                    curl -X POST "${TEAMS_WEBHOOK_URL}" \
+                    -H "Content-Type: application/json" \
+                    -d '${escapedPayload}'
+                """
+            }
         }
         failure {
-            echo "Code deployment failed."
+            script {
+                def subject = "Jenkins Build Failed"
+                def message = "The build failed. Please check the Jenkins console output for more details."
+
+                // Send email
+                mail to: env.EMAIL_RECIPIENTS, 
+                     subject: subject, 
+                     body: message
+                
+                // Send Microsoft Teams notification
+                def teamsPayload = [
+                    body: [
+                        attachments: [
+                            [
+                                contentType: "application/vnd.microsoft.card.adaptive",
+                                content: [
+                                    type: "AdaptiveCard",
+                                    body: [
+                                        [
+                                            type: "TextBlock",
+                                            text: "Jenkins Build Failed",
+                                            weight: "bolder",
+                                            size: "large"
+                                        ],
+                                        [
+                                            type: "TextBlock",
+                                            text: "The build failed. Please check the Jenkins console output for more details."
+                                        ]
+                                    ],
+                                    actions: []
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+
+                // Escape JSON payload for curl
+                def escapedPayload = groovy.json.JsonOutput.toJson(teamsPayload).replaceAll('"', '\\"')
+
+                sh """
+                    curl -X POST "${TEAMS_WEBHOOK_URL}" \
+                    -H "Content-Type: application/json" \
+                    -d '${escapedPayload}'
+                """
+            }
         }
     }
 }
