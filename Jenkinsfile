@@ -88,82 +88,80 @@ pipeline {
         }
     }
     post {
-        success {
-            script {
-                // Send Microsoft Teams notification
-                def teamsPayload = [
-                    body: [
-                        attachments: [
-                            [
-                                contentType: "application/vnd.microsoft.card.adaptive",
-                                content: [
-                                    type: "AdaptiveCard",
-                                    body: [
-                                        [
-                                            type: "TextBlock",
-                                            text: "Jenkins Build Successful",
-                                            weight: "bolder",
-                                            size: "large"
-                                        ],
-                                        [
-                                            type: "TextBlock",
-                                            text: "The build was successful. Please check the Jenkins console output for more details."
-                                        ]
+    success {
+        script {
+            def teamsPayload = [
+                body: [
+                    attachments: [
+                        [
+                            contentType: "application/vnd.microsoft.card.adaptive",
+                            content: [
+                                type: "AdaptiveCard",
+                                body: [
+                                    [
+                                        type: "TextBlock",
+                                        text: "Jenkins Build Successful",
+                                        weight: "bolder",
+                                        size: "large"
                                     ],
-                                    actions: []
-                                ]
+                                    [
+                                        type: "TextBlock",
+                                        text: "The build was successful. Please check the Jenkins console output for more details."
+                                    ]
+                                ],
+                                actions: []
                             ]
                         ]
                     ]
                 ]
+            ]
 
-                // Escape JSON payload for curl
-                def escapedPayload = groovy.json.JsonOutput.toJson(teamsPayload).replaceAll('"', '\\"')
+            def escapedPayload = groovy.json.JsonOutput.toJson(teamsPayload).replaceAll('"', '\\"')
 
-                sh """
-                    curl -X POST "${TEAMS_WEBHOOK_URL}" \
-                    -H "Content-Type: application/json" \
-                    -d '${escapedPayload}'
-                """
-            }
-        }
-
-        failure {        
-                // Send Microsoft Teams notification
-                def teamsPayload = [
-                    body: [
-                        attachments: [
-                            [
-                                contentType: "application/vnd.microsoft.card.adaptive",
-                                content: [
-                                    type: "AdaptiveCard",
-                                    body: [
-                                        [
-                                            type: "TextBlock",
-                                            text: "Jenkins Build Failed",
-                                            weight: "bolder",
-                                            size: "large"
-                                        ],
-                                        [
-                                            type: "TextBlock",
-                                            text: "The build failed. Please check the Jenkins console output for more details."
-                                        ]
-                                    ],
-                                    actions: []
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-
-                // Escape JSON payload for curl
-                def escapedPayload = groovy.json.JsonOutput.toJson(teamsPayload).replaceAll('"', '\\"')
-
-                sh """
-                    curl -X POST "${TEAMS_WEBHOOK_URL}" \
-                    -H "Content-Type: application/json" \
-                    -d '${escapedPayload}'
-                """
+            sh """
+                curl -X POST "${TEAMS_WEBHOOK_URL}" \
+                -H "Content-Type: application/json" \
+                -d '${escapedPayload}'
+            """
         }
     }
+
+    failure {
+        script {  // <-- ADD THIS WRAPPING SCRIPT BLOCK
+            def teamsPayload = [
+                body: [
+                    attachments: [
+                        [
+                            contentType: "application/vnd.microsoft.card.adaptive",
+                            content: [
+                                type: "AdaptiveCard",
+                                body: [
+                                    [
+                                        type: "TextBlock",
+                                        text: "Jenkins Build Failed",
+                                        weight: "bolder",
+                                        size: "large"
+                                    ],
+                                    [
+                                        type: "TextBlock",
+                                        text: "The build failed. Please check the Jenkins console output for more details."
+                                    ]
+                                ],
+                                actions: []
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+
+            def escapedPayload = groovy.json.JsonOutput.toJson(teamsPayload).replaceAll('"', '\\"')
+
+            sh """
+                curl -X POST "${TEAMS_WEBHOOK_URL}" \
+                -H "Content-Type: application/json" \
+                -d '${escapedPayload}'
+            """
+        }  // <-- CLOSE THE SCRIPT BLOCK HERE
+    }
+  }
 }
