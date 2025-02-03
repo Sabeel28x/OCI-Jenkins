@@ -171,7 +171,6 @@ pipeline {
                     -d '${jsonPayload}'
                 """
             }
-         }
-      }
-   }
+        }
+    }
 }
