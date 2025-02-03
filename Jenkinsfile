@@ -96,11 +96,20 @@ pipeline {
                                         type: "TextBlock",
                                         text: "✅ Jenkins Build Successful",
                                         weight: "bolder",
-                                        size: "large"
+                                        size: "large",
+                                        color: "good"
                                     ],
                                     [
                                         type: "TextBlock",
-                                        text: "The build was successful. Check the Jenkins console output for details."
+                                        text: "Job: ${JOB_NAME}"
+                                    ],
+                                    [
+                                        type: "TextBlock",
+                                        text: "Build Number: #${BUILD_NUMBER}"
+                                    ],
+                                    [
+                                        type: "TextBlock",
+                                        text: "[View Build Logs](${BUILD_URL})"
                                     ]
                                 ]
                             ]
@@ -138,7 +147,15 @@ pipeline {
                                     ],
                                     [
                                         type: "TextBlock",
-                                        text: "The build failed. Check the Jenkins console output for details."
+                                        text: "Job: ${JOB_NAME}"
+                                    ],
+                                    [
+                                        type: "TextBlock",
+                                        text: "Build Number: #${BUILD_NUMBER}"
+                                    ],
+                                    [
+                                        type: "TextBlock",
+                                        text: "[View Build Logs](${BUILD_URL})"
                                     ]
                                 ]
                             ]
