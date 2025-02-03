@@ -9,7 +9,6 @@ pipeline {
         REPO_URL = 'https://github.com/Sabeel28x/OCI-Jenkins.git'
         BRANCH = 'main'
         APACHE_DOC_ROOT = '/var/www/html'
-        EMAIL_RECIPIENTS = 'maajidh.sabeel@postiefs.com'
         TEAMS_WEBHOOK_URL = 'https://prod-24.centralindia.logic.azure.com:443/workflows/c01ef101a97a49aaaa3df9d6446738b9/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=u-ZjwsTHFM5tP0U7I6SHvKpWP6YLhIvyjKlDMf2EUck'
     }
     
@@ -83,15 +82,6 @@ pipeline {
 
     post {
         success {
-            script {
-                def subject = "✅ Jenkins Build Successfull"
-                def message = "The build was successfull. Please check the Jenkins console output for more details."
-
-                // Send email
-                mail to: env.EMAIL_RECIPIENTS, 
-                     subject: subject, 
-                     body: message
-                
             script {
                 def teamsPayload = [
                     type: "message",
